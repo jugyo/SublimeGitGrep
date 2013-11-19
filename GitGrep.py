@@ -6,18 +6,23 @@ class GitGrepCommand(sublime_plugin.WindowCommand):
         self.window.show_input_panel('git grep', '', self.git_grep, None, None)
 
     def git_grep(self, query):
+        items = []
+
         try:
             base_dir = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'])
             base_dir = base_dir.decode('utf8', 'ignore').strip()
             os.chdir(base_dir)
             matches = subprocess.check_output(['git', 'grep', query]).strip()
             matches = matches.decode('utf8', 'ignore').split("\n")
-            items = []
             for m in matches:
-                print(m)
                 file_name, line, match = m.split(":", 2)
                 items.append([match.strip(), ":".join([file_name, line])])
+        except subprocess.CalledProcessError as e:
+            print(e)
 
+        if len(items) == 0:
+            self.window.show_quick_panel(['No result'], None)
+        else:
             def on_done(index):
                 if index < 0:
                     return
@@ -28,7 +33,4 @@ class GitGrepCommand(sublime_plugin.WindowCommand):
                 point = view.text_point(int(line_no) - 1 ,0)
                 regison = view.line(point)
                 view.show_at_center(regison)
-
             self.window.show_quick_panel(items, on_done)
-        except subprocess.CalledProcessError as e:
-            pass
