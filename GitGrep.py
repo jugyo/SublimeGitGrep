@@ -30,8 +30,10 @@ class GitGrepCommand(sublime_plugin.WindowCommand):
                 file_name = os.path.join(base_dir, file_name)
                 view = self.window.open_file(file_name, mode)
                 point = view.text_point(int(line_no) - 1 ,0)
-                regison = view.line(point)
-                view.show_at_center(regison)
+                region = view.line(point)
+                view.sel().clear()
+                view.sel().add(region)
+                view.show_at_center(region)
 
             def on_done(index):
                 if index >= 0:
